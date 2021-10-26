@@ -23,6 +23,12 @@ def clear_data():
     shown_image.clear()
     metadata.clear()
 
+def create_buttons():
+    Button(f1, text='About', command=lambda: raise_frame(f2)).grid(row=10, column=0, pady=450, sticky=W)
+    Button(f1, text='Help', command=lambda: raise_frame(f3)).grid(row=10, column=0, pady=450, sticky=E)
+    Button(f2, text='Go Home', command=lambda: raise_frame(f1)).grid(row=5, column=1)
+    Button(f3, text='Go Home', command=lambda: raise_frame(f1)).grid(row=5, column=1)
+
 f1 = LabelFrame(root, width=650, height=700) #Home page
 f1.grid_propagate(False)
 f1.grid_rowconfigure(0, weight=0)
@@ -37,6 +43,26 @@ for frame in (f1, f2, f3, f4):
 
 def begin():
     img.show_logo(f1)
+    create_buttons()
+    # About and Help page
+    text = Text(f2, height=8, bg="#22bfc5")
+    text.grid(row=0, column=1)
+    text.tag_add("center", "1.0", "end")
+    text.insert('1.0',
+                'About\n Image Metadata app allows you to update metadata of the images with their description. The app uses '
+                'machine learning to understand your images. With the help of Google Vision API, we can detect and extract information '
+                'about entities in an image, across a broad group of categories. \n It only takes a few minutes to process images on your '
+                'computer! \n If you would like to learn more about Vision AI, go to https://cloud.google.com/vision/')
+
+    text = Text(f3, height=10, bg="#22bfc5")
+    text.grid(row=0, column=1)
+    text.tag_add("center", "1.0", "end")
+    text.insert('1.0',
+                'User Guide\n 1. To process the images first click "Pick images" button on the Home screen. \n 2. Select images from your '
+                'computer you would like to process. You can pick as many files as you want with the extension png, jpeg, jpg.\n 3. Tap on Save button and '
+                'if everything looks okay, confirm in the dialog window.\n\n Remember, if you change your mind at the last minute, you can press Undo button to revert '
+                'the change and metadata will be removed from the images.')
+
     appHighlightFont = font.Font(family='Pegasus', size=14)
     instructions = Label(f1, text="Select images on your computer", font=appHighlightFont)
     instructions.grid(row=1, column=0, padx=170)
