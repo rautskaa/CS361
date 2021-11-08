@@ -1,6 +1,8 @@
-from tkinter import Label, Image, Button
+from tkinter import Label, Image, Button, END
 import PIL
 from PIL import ImageTk, Image
+import requests
+
 
 class ImagesProcessing:
 
@@ -56,26 +58,32 @@ class ImagesProcessing:
         img_label.grid(row=4, column=0, padx=170)
         return img_label
 
-    def next_images(self, images, index_to_show, image_index, shown_image):
+    def next_images(self, images, index_to_show, image_index, shown_image, text_box):
         """Shows next image in the set of selected images.
           :param images
           :param index_to_show
           :param image_index
-          :param shown_image"""
+          :param shown_image
+          :param text_box"""
         # If there are images left, show the image
         if image_index[-1] < len(images) - 1:
             updated_index = image_index[-1] + 1
-            self.update_image_to_view(images, updated_index, index_to_show, image_index, shown_image)
+            image = self.update_image_to_view(images, updated_index, index_to_show, image_index, shown_image)
+            # clear and update the text box with the metadata description
+            self.update_text_box(text_box, image)
 
-    def previous_images(self, images, index_to_show, image_index, shown_image):
+    def previous_images(self, images, index_to_show, image_index, shown_image, text_box):
         """Shows previous image in the set of selected images.
           :param images
           :param index_to_show
           :param image_index
-          :param shown_image"""
+          :param shown_image
+          :param text_box"""
         if image_index[-1] >= 1:
             updated_index = image_index[-1] - 1
-            self.update_image_to_view(images, updated_index, index_to_show, image_index, shown_image)
+            image = self.update_image_to_view(images, updated_index, index_to_show, image_index, shown_image)
+            # clear and update the text box with the metadata description
+            self.update_text_box(text_box, image)
 
     def set_index_to_show(self, images, image_index, index_to_show):
         """Updates index of displayed images.
@@ -84,13 +92,14 @@ class ImagesProcessing:
           :param index_to_show"""
         index_to_show.set("Image " + str(image_index[-1] + 1) + " out of " + str(len(images)))
 
-    def update_image_to_view(self, images, updated_index, index_to_show,  image_index, shown_image):
+    def update_image_to_view(self, images, updated_index, index_to_show, image_index, shown_image):
         """Updates image to show.
            :param images
            :param updated_index
            :param index_to_show
            :param image_index
-           :param shown_image"""
+           :param shown_image
+           :return new image"""
         image_index.pop()
         image_index.append(updated_index)
         if shown_image:
@@ -100,3 +109,15 @@ class ImagesProcessing:
         current_image = self.show_image(new_image)
         shown_image.append(current_image)
         self.set_index_to_show(images, image_index, index_to_show)
+        return new_image
+
+    def update_text_box(self, text_box, image):
+        """Updates image description in text box.
+           :param text_box
+           :param image_description
+        """
+        # Make a call to the Image Metadata Service to get an image description.
+        image_description = requests.get('service URL' + image).content
+        text_box.delete(1.0, END)
+        text_box.insert(1.0, image_description)
+        text_box.tag_add("center", 1.0, "end")

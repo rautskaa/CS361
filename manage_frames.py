@@ -82,7 +82,6 @@ class Frames:
             self.shown_image.pop()
         image = images[0]
         self.img.set_index_to_show(images, self.image_index, self.index_to_show)
-        # make a call to the service and return dictionary of lists, file name: list of strings
 
         current_image = self.img.show_image(image)
         self.shown_image.append(current_image)
@@ -91,17 +90,17 @@ class Frames:
         image_menu = Label(self.f1, textvariable=self.index_to_show)
         image_menu.grid(row=5, column=0)
 
+        # Create a text box and set an image description
+        text_box = self.show_text_box()
+        self.img.update_text_box(text_box, image)
+
         # Create and configure icons
         left_arrow_icon = self.img.show_icon("arrow-left.png", W)
         right_arrow_icon = self.img.show_icon("arrow-right.png", E)
         left_arrow_icon.configure(
-            command=lambda: self.img.previous_images(images, self.index_to_show, self.image_index, self.shown_image))
+            command=lambda: self.img.previous_images(images, self.index_to_show, self.image_index, self.shown_image, text_box))
         right_arrow_icon.configure(
-            command=lambda: self.img.next_images(images, self.index_to_show, self.image_index, self.shown_image))
-
-        # Create text box
-        data_to_show = "flower"  # metadata
-        text_box = self.show_text_box(data_to_show)
+            command=lambda: self.img.next_images(images, self.index_to_show, self.image_index, self.shown_image, text_box))
 
         # Create go home and save buttons
         elements = [text_box, image_menu, left_arrow_icon, right_arrow_icon, self.shown_image]
@@ -233,13 +232,11 @@ class Frames:
         Button(self.f2, text='Go Home', command=lambda: self.raise_frame(self.f1)).grid(row=5, column=1)
         Button(self.f3, text='Go Home', command=lambda: self.raise_frame(self.f1)).grid(row=5, column=1)
 
-    def show_text_box(self, data_to_show):
-        """Show text box
-        :param data_to_show"""
+    def show_text_box(self):
+        """Show text box"""
         text_box = Text(self.f1, height=5, width=25, padx=15, pady=15, bg="#22bfc5")
         text_box.tag_configure("center", justify="center")
         text_box.grid(column=0, row=6)
-        text_box.insert(1.0, data_to_show)
         text_box.tag_add("center", 1.0, "end")
         return text_box
 
