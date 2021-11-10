@@ -1,3 +1,4 @@
+import os
 from tkinter import Label, Image, Button, END
 import PIL
 from PIL import ImageTk, Image
@@ -117,7 +118,11 @@ class ImagesProcessing:
            :param image_description
         """
         # Make a call to the Image Metadata Service to get an image description.
-        image_description = requests.get('service URL' + image).content
+        # image_description = requests.get('http://127.0.0.1:5000/image_process?url=photos/' + image).content
+        image_name = os.path.basename(image)
+        print(os.path.basename(image))
+        image_description = requests.get('http://127.0.0.1:5000/image_process?url=photos/' + image_name).content
+        # image_description = "flower" # remove this
         text_box.delete(1.0, END)
         text_box.insert(1.0, image_description)
         text_box.tag_add("center", 1.0, "end")

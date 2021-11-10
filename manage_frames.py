@@ -1,7 +1,10 @@
+import os
 from tkinter import *
 from tkinter import font
 from tkinter.filedialog import askopenfilenames
 from tkinter import messagebox
+
+import requests
 
 from process_images import ImagesProcessing
 
@@ -105,7 +108,7 @@ class Frames:
         # Create go home and save buttons
         elements = [text_box, image_menu, left_arrow_icon, right_arrow_icon, self.shown_image]
         home_button = self.go_home_button(elements, self.f1, [3, 0, 100])
-        self.save_button(elements, home_button)
+        self.save_button(elements, home_button, images)
 
     def go_home_button(self, elements, frame, layout):
         """Creates go home button
@@ -129,24 +132,26 @@ class Frames:
         go_home_main_page.set("Go home")
         return go_home_main_page_button
 
-    def save_button(self, elements, go_home_main_page_button):
+    def save_button(self, elements, go_home_main_page_button, images):
         """Creates save button
         :param elements to destroy
-        :param go_home_main_page_button"""
+        :param go_home_main_page_button
+        :param images"""
         Button(self.f1, text='Save', command=lambda: self.raise_frame(self.f4)).grid(row=0, column=2, sticky=W)
         save = StringVar()
         save_button = Button(self.f1, textvariable=save,
-                             command=lambda: self.confirm_saving(elements, go_home_main_page_button), font="Roman",
+                             command=lambda: self.confirm_saving(elements, go_home_main_page_button, images), font="Roman",
                              bg="#22bfc5", highlightbackground='#22bfc5', height=2, width=11)
         save.set("Save Metadata")
         save_button.grid(row=2, column=0, padx=100)
 
-    def undo_button(self, text):
+    def undo_button(self, text, images):
         """Creates undo button on Save page
-        :param text to display"""
+        :param text to display
+        :param images"""
         undo = StringVar()
         undo_button = Button(self.f4, textvariable=undo,
-                             command=lambda: self.remove_metadata(undo, text), font="Roman",
+                             command=lambda: self.remove_metadata(undo, text, images), font="Roman",
                              bg="#22bfc5", highlightbackground='#22bfc5', height=2, width=11)
         undo_button.grid(row=1, column=1)
         undo.set("Undo")
@@ -160,10 +165,11 @@ class Frames:
         pick_image.set("Pick Images")
         pick_image_button.grid(row=2, column=0, padx=170)
 
-    def confirm_saving(self, elements, go_home_main_page_button):
+    def confirm_saving(self, elements, go_home_main_page_button, images):
         """Confirmation window to save metadata
         :param elements to destroy
-        :param go_home_main_page_button"""
+        :param go_home_main_page_button
+        :param images"""
         dialog = messagebox.askquestion('Save Metadata',
                                         'Are you sure you want to save metadata for the selected images?',
                                         icon='warning')
@@ -179,7 +185,7 @@ class Frames:
         new_go_home_button = self.go_home_button(elements, self.f4, [2, 1])
         # Add text and undo button
         text = self.show_text(self.f4, 0, 1, 'All Metadata in images is now saved')
-        self.undo_button(text)
+        self.undo_button(text, images)
 
     def destroy_elements(self, elements, go_home_button, image_index, metadata):
         """Destroy elements on the page
@@ -252,10 +258,15 @@ class Frames:
         text.insert('1.0', text_to_show)
         return text
 
-    def remove_metadata(self, undo, text):
+    def remove_metadata(self, undo, text, images):
         """Remove metadata if user chooses to. Sets button from Undo to Undone
         :param undo
-        :param text"""
+        :param text
+        :param images"""
         undo.set("Undone")
         text.delete('1.0', END)
         text.insert('1.0', "All metadata is now removed")
+        for image in images:
+            image_name = os.path.basename(image)
+            print(os.path.basename(image))
+            requests.get('http://127.0.0.1:5000/image_del_METADATA?url=photos/' + image_name)
