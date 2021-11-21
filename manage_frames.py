@@ -33,7 +33,7 @@ class Frames:
 
     def start(self):
         """Beginning of the program. Build logo, all buttons, About and Help pages."""
-        self.img.show_logo()
+        self.img.show_logo(None, True)
         self.create_buttons()
         self.pick_images_button()
         self.about_page()
@@ -47,14 +47,20 @@ class Frames:
         frame.tkraise()
 
     def about_page(self):
-        """Create About page with text displayed."""
-        text_to_show = 'About\n Image Metadata app allows you to update metadata of the images with their description. The app uses machine learning to understand your images. With the help of Google Vision API, we can detect and extract information about entities in an image, across a broad group of categories. \n It only takes a few minutes to process images on your computer! \n If you would like to learn more about Vision AI, go to https://cloud.google.com/vision/'
-        self.show_text(self.f2, 0, 1, text_to_show)
+        """Create About page with the text displayed."""
+        self.img.show_logo(self.f2, False)
+        self.go_home_button_non_main_page(self.f2, [3, 0, 100])
+        title_to_show = "About Image Metadata App \n"
+        text_to_show = "\nImage Metadata app allows to view and update metadata of the images with their description. \nWith the help of Google Vision API, the app detects and extracts information about \nentities in an image, across a broad group of categories: labels, landmarks, logos, \ntext.\nIt only takes a few minutes to process images on your computer. \n\nIf you would like to learn more about Vision AI, go to https://cloud.google.com/vision."
+        self.show_text(self.f2, 7, 0, text_to_show, title_to_show)
 
     def help_page(self):
         """Create Help page with text displayed."""
-        text_to_show = 'User Guide\n 1. To process the images first click "Pick images" button on the Home screen. \n 2. Select images from your computer you would like to process. You can pick as many files as you want with the extension png, jpeg, jpg.\n 3. Tap on Save button and if everything looks okay, confirm in the dialog window.\n\n Remember, if you change your mind at the last minute, you can press Undo button to revert the change and metadata will be removed from the images.'
-        self.show_text(self.f3, 0, 1, text_to_show)
+        self.img.show_logo(self.f3, False)
+        self.go_home_button_non_main_page(self.f3, [3, 0, 100])
+        title_to_show = "User Guide \n"
+        text_to_show = '\n1. To process the images first click "Pick images" button on the Home screen. \n2. Select images from your computer you would like to process. You can pick as many files as you want with the extension png, jpeg, jpg.\n3. Tap on Save button and if everything looks okay, confirm in the dialog window.\n\nRemember, if you change your mind at the last minute, you can press Undo button\nto revert the change and metadata will be removed from the images.'
+        self.show_text(self.f3, 7, 0, text_to_show, title_to_show)
 
     def image_picker_instructions(self):
         """Add instructions for image picker button."""
@@ -110,6 +116,26 @@ class Frames:
         home_button = self.go_home_button(elements, self.f1, [3, 0, 100])
         self.save_button(elements, home_button, images)
 
+    def go_home_button_non_main_page(self, frame, layout):
+        """Creates go home button
+        :param elements to destroy
+        :param frame to attach the button to
+        :param layout of the button.
+        :return created button"""
+        row = layout[0]
+        column = layout[1]
+        padx = None
+        if len(layout) > 2:
+            padx = layout[2]
+        go_home_main_page = StringVar()
+        go_home_main_page_button = Button(frame, textvariable=go_home_main_page,
+                                          command=lambda: self.raise_frame(self.f1),
+                                          font="Roman",
+                                          bg="#22bfc5", highlightbackground='#22bfc5', height=2, width=11)
+        go_home_main_page_button.grid(row=row, column=column, padx=padx)
+        go_home_main_page.set("Go home")
+        return go_home_main_page_button
+
     def go_home_button(self, elements, frame, layout):
         """Creates go home button
         :param elements to destroy
@@ -153,7 +179,7 @@ class Frames:
         undo_button = Button(self.f4, textvariable=undo,
                              command=lambda: self.remove_metadata(undo, text, images), font="Roman",
                              bg="#22bfc5", highlightbackground='#22bfc5', height=2, width=11)
-        undo_button.grid(row=1, column=1)
+        undo_button.grid(row=1, column=0)
         undo.set("Undo")
 
     def pick_images_button(self):
@@ -176,15 +202,21 @@ class Frames:
         if dialog == 'yes':
             self.raise_frame(self.f4)
             print("Okay, Saving metadata...")
+            for image in images:
+                image_name = os.path.basename(image)
+                print(os.path.basename(image))
+                print("Sending a call to the service to save metadata for image " + image_name)
+                requests.get('http://127.0.0.1:5000/image_process_with_save?url=photos/' + image_name)
             self.destroy_element(go_home_main_page_button)
         else:
             messagebox.showinfo('Return', 'You will now return to the Home screen')
             self.destroy_elements(elements, go_home_main_page_button, self.image_index, self.metadata)
             self.start()
 
-        new_go_home_button = self.go_home_button(elements, self.f4, [2, 1])
+        new_go_home_button = self.go_home_button(elements, self.f4, [2, 0])
         # Add text and undo button
-        text = self.show_text(self.f4, 0, 1, 'All Metadata in images is now saved')
+        self.img.show_logo(self.f4, False)
+        text = self.show_text(self.f4, 7, 0, "", "All Metadata in images is now saved")
         self.undo_button(text, images)
 
     def destroy_elements(self, elements, go_home_button, image_index, metadata):
@@ -235,27 +267,29 @@ class Frames:
                                                                                       sticky=W)
         Button(self.f1, text='Help', command=lambda: self.raise_frame(self.f3)).grid(row=10, column=0, pady=450,
                                                                                      sticky=E)
-        Button(self.f2, text='Go Home', command=lambda: self.raise_frame(self.f1)).grid(row=5, column=1)
-        Button(self.f3, text='Go Home', command=lambda: self.raise_frame(self.f1)).grid(row=5, column=1)
 
     def show_text_box(self):
         """Show text box"""
-        text_box = Text(self.f1, height=5, width=25, padx=15, pady=15, bg="#22bfc5")
+        text_box = Text(self.f1, height=10, width=40, padx=15, pady=15, bg="#22bfc5")
         text_box.tag_configure("center", justify="center")
         text_box.grid(column=0, row=6)
         text_box.tag_add("center", 1.0, "end")
         return text_box
 
-    def show_text(self, frame, row, column, text_to_show):
+    def show_text(self, frame, row, column, text_to_show, title_to_show):
         """Show text
-        :param frame
+        :param frames
         :param row
         :param column
-        :param text_to_show"""
-        text = Text(frame, height=8, bg="#22bfc5")
-        text.grid(row=row, column=column)
-        text.tag_add("center", "1.0", "end")
-        text.insert('1.0', text_to_show)
+        :param text_to_show
+        :param title_to_show"""
+        text = Text(frame, height=15, width=70, bg="#22bfc5", padx=10, pady=10)
+        text.tag_configure('big', font=('Arial', 14, 'bold'), justify='center')
+        text.tag_configure('color',
+                            font=('Ariel', 12))
+        text.insert(END, title_to_show, 'big')
+        text.insert(END, text_to_show, 'color')
+        text.grid(row=row, column=column, padx=10, pady=10)
         return text
 
     def remove_metadata(self, undo, text, images):
@@ -266,7 +300,9 @@ class Frames:
         undo.set("Undone")
         text.delete('1.0', END)
         text.insert('1.0', "All metadata is now removed")
+        text.tag_configure('big', font=('Arial', 14, 'bold'), justify='center')
         for image in images:
             image_name = os.path.basename(image)
+            print("Sending a call to the service to remove metadata for image " + image_name)
             print(os.path.basename(image))
             requests.get('http://127.0.0.1:5000/image_del_METADATA?url=photos/' + image_name)

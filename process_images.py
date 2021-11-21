@@ -1,3 +1,4 @@
+import json
 import os
 from tkinter import Label, Image, Button, END
 import PIL
@@ -10,11 +11,17 @@ class ImagesProcessing:
     def __init__(self, frame):
         self.frame = frame
 
-    def show_logo(self):
+    def show_logo(self, frame, main_page):
         """Shows logo."""
         logo = PIL.Image.open("logo.png")
         logo = ImageTk.PhotoImage(logo)
-        logo_label = Label(self.frame, image=logo)
+        # If it's a main page, attach it to a main frame
+        if main_page:
+            res_frame = self.frame
+        # If it's About or Help page, attach it to a corresponding frame
+        else:
+            res_frame = frame
+        logo_label = Label(res_frame, image=logo)
         logo_label.image = logo
         logo_label.grid(row=0, column=0, padx=250)
 
@@ -118,11 +125,11 @@ class ImagesProcessing:
            :param image_description
         """
         # Make a call to the Image Metadata Service to get an image description.
-        # image_description = requests.get('http://127.0.0.1:5000/image_process?url=photos/' + image).content
         image_name = os.path.basename(image)
-        print(os.path.basename(image))
-        image_description = requests.get('http://127.0.0.1:5000/image_process?url=photos/' + image_name).content
-        # image_description = "flower" # remove this
+        print("Sending a call to the service to get metadata for image " + image_name)
+        image_description = requests.get('http://127.0.0.1:5000/image_process_only?url=photos/' + image_name).content
+        data = json.loads(image_description)
+        final_string = ', '.join(data["labels"])
         text_box.delete(1.0, END)
-        text_box.insert(1.0, image_description)
+        text_box.insert(1.0, final_string)
         text_box.tag_add("center", 1.0, "end")
