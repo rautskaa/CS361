@@ -59,7 +59,7 @@ class Frames:
         self.img.show_logo(self.f3, False)
         self.go_home_button_non_main_page(self.f3, [3, 0, 100])
         title_to_show = "User Guide \n"
-        text_to_show = '\n1. To process the images first click "Pick images" button on the Home screen. \n2. Select images from your computer you would like to process. You can pick as many files as you want with the extension png, jpeg, jpg.\n3. Tap on Save button and if everything looks okay, confirm in the dialog window.\n\nRemember, if you change your mind at the last minute, you can press Undo button\nto revert the change and metadata will be removed from the images.'
+        text_to_show = '\n1. To process images click the "Pick images" button on the Home screen. \n2. Select images from your computer you would like to process. Supported extensions are png, jpeg, jpg.\n3. To check the metadata to be added for each image, tap on the right arrow button. If everything looks okay, select the "Save" button to save metadata and then confirm in the dialog window.\n4. To view metadata saved, open information about each image and check the "Description" section.\n\nRemember, if you change your mind at the last minute, you can press the Undo button\nto revert the change and metadata will be removed from the images.'
         self.show_text(self.f3, 7, 0, text_to_show, title_to_show)
 
     def image_picker_instructions(self):
