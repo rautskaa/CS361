@@ -77,7 +77,7 @@ class ImagesProcessing:
         if image_index[-1] < len(images) - 1:
             updated_index = image_index[-1] + 1
             image = self.update_image_to_view(images, updated_index, index_to_show, image_index, shown_image)
-            # clear and update the text box with the metadata description
+            # clear all data and update the text box with the metadata description for next image
             self.update_text_box(text_box, image)
 
     def previous_images(self, images, index_to_show, image_index, shown_image, text_box):
@@ -90,7 +90,7 @@ class ImagesProcessing:
         if image_index[-1] >= 1:
             updated_index = image_index[-1] - 1
             image = self.update_image_to_view(images, updated_index, index_to_show, image_index, shown_image)
-            # clear and update the text box with the metadata description
+            # clear all data and update the text box with the metadata description for previous image
             self.update_text_box(text_box, image)
 
     def set_index_to_show(self, images, image_index, index_to_show):
@@ -124,9 +124,9 @@ class ImagesProcessing:
            :param text_box
            :param image_description
         """
-        # Make a call to the Image Metadata Service to get an image description.
         image_name = os.path.basename(image)
         print("Sending a call to the service to get metadata for image " + image_name)
+        # Make a call to the Image Metadata Service to get a metadata with image description.
         image_description = requests.get('http://127.0.0.1:5000/image_process_only?url=photos/' + image_name).content
         data = json.loads(image_description)
         final_string = ', '.join(data["labels"])

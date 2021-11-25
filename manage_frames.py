@@ -18,7 +18,7 @@ class Frames:
         self.f4 = f4  # Save page
         self.index_to_show = StringVar()
         self.image_index = [0]
-        self.metadata = {}  # metadata for all images
+        self.metadata = {}
         self.shown_image = []
         self.configure_frames()
         self.img = ImagesProcessing(f1)
@@ -49,18 +49,37 @@ class Frames:
     def about_page(self):
         """Create About page with the text displayed."""
         self.img.show_logo(self.f2, False)
-        self.go_home_button_non_main_page(self.f2, [3, 0, 100])
+        self.go_home_button(None, self.f2, [3, 0, 100], False)
         title_to_show = "About Image Metadata App \n"
-        text_to_show = "\nImage Metadata app allows to view and update metadata of the images with their description. \nWith the help of Google Vision API, the app detects and extracts information about \nentities in an image, across a broad group of categories: labels, landmarks, logos, \ntext.\nIt only takes a few minutes to process images on your computer. \n\nIf you would like to learn more about Vision AI, go to https://cloud.google.com/vision."
-        self.show_text(self.f2, 7, 0, text_to_show, title_to_show)
+        self.show_text(self.f2, 7, 0, self.text_about_page(), title_to_show)
 
     def help_page(self):
         """Create Help page with text displayed."""
         self.img.show_logo(self.f3, False)
-        self.go_home_button_non_main_page(self.f3, [3, 0, 100])
+        self.go_home_button(None, self.f3, [3, 0, 100], False)
         title_to_show = "User Guide \n"
-        text_to_show = '\n1. To process images click the "Pick images" button on the Home screen. \n2. Select images from your computer you would like to process. Supported extensions are png, jpeg, jpg.\n3. To check the metadata to be added for each image, tap on the right arrow button. If everything looks okay, select the "Save" button to save metadata and then confirm in the dialog window.\n4. To view metadata saved, open information about each image and check the "Description" section.\n\nRemember, if you change your mind at the last minute, you can press the Undo button\nto revert the change and metadata will be removed from the images.'
-        self.show_text(self.f3, 7, 0, text_to_show, title_to_show)
+        self.show_text(self.f3, 7, 0, self.text_help_page(), title_to_show)
+
+    def text_about_page(self):
+        """Text to display in About page."""
+        return "\nImage Metadata app allows to view and update metadata of the images with " \
+                       "their description. \nWith the help of Google Vision API, the app detects and " \
+                       "extracts information about \nentities in an image, across a broad group of " \
+                       "categories: labels, landmarks, logos, \ntext.\nIt only takes a few minutes " \
+                       "to process images on your computer. \n\nIf you would like to learn more " \
+                       "about Vision AI, go to https://cloud.google.com/vision."
+
+    def text_help_page(self):
+        """Text to display in Help page."""
+        return '\n1. To process images click the "Pick images" button on the Home screen. ' \
+                       '\n2. Select images from your computer you would like to process. Supported ' \
+                       'extensions are png, jpeg, jpg.\n3. To check the metadata to be added for ' \
+                       'each image, tap on the right arrow button. If everything looks okay, select ' \
+                       'the "Save" button to save metadata and then confirm in the dialog window.' \
+                       '\n4. To view metadata saved, open information about each image and check ' \
+                       'the "Description" section.\n\nRemember, if you change your mind at the last ' \
+                       'minute, you can press the Undo button\nto revert the change and metadata ' \
+                       'will be removed from the images.'
 
     def image_picker_instructions(self):
         """Add instructions for image picker button."""
@@ -77,25 +96,33 @@ class Frames:
         shown_image.clear()
         metadata.clear()
 
-    def pick_images(self):
+    def show_images(self):
         """Opens image picker and lets user select images with png and jpeg format.
-        Creates GUI after images were selected: image menu, buttons, image display, text box with metadata and icons"""
+        Creates GUI after images were selected: image menu, buttons, image display,
+        text box with metadata and icons"""
         images = askopenfilenames(parent=self.f1, title="Select an Image",
                                   filetypes=(("png", "*.png"), ("jpeg", "*.jpg"), ("jpeg", "*.jpeg")))
-        print(images)
+        self.reset_images()
+        image = images[0]
+        self.img.set_index_to_show(images, self.image_index, self.index_to_show)
+        current_image = self.img.show_image(image)
+        self.shown_image.append(current_image)
+        self.build_gui_elements(image, images)
+
+    def reset_images(self):
+        """Resets images index and displayed images."""
         for image_index in self.image_index:
             self.image_index.pop()
         self.image_index.append(0)
         if self.shown_image:
             self.shown_image[-1].grid_forget()
             self.shown_image.pop()
-        image = images[0]
-        self.img.set_index_to_show(images, self.image_index, self.index_to_show)
 
-        current_image = self.img.show_image(image)
-        self.shown_image.append(current_image)
-
-        # Create image menu
+    def build_gui_elements(self, image, images):
+        """Create GUI elements on the page for displaying images
+        :param image the first image to show
+        :param images all selected images."""
+        # Create image menu, text box, icons and buttons
         image_menu = Label(self.f1, textvariable=self.index_to_show)
         image_menu.grid(row=5, column=0)
 
@@ -104,59 +131,55 @@ class Frames:
         self.img.update_text_box(text_box, image)
 
         # Create and configure icons
-        left_arrow_icon = self.img.show_icon("arrow-left.png", W)
-        right_arrow_icon = self.img.show_icon("arrow-right.png", E)
-        left_arrow_icon.configure(
-            command=lambda: self.img.previous_images(images, self.index_to_show, self.image_index, self.shown_image, text_box))
-        right_arrow_icon.configure(
-            command=lambda: self.img.next_images(images, self.index_to_show, self.image_index, self.shown_image, text_box))
+        left_arrow_icon = self.create_navigation_icon(True, images, text_box)
+        right_arrow_icon = self.create_navigation_icon(False, images, text_box)
 
         # Create go home and save buttons
         elements = [text_box, image_menu, left_arrow_icon, right_arrow_icon, self.shown_image]
-        home_button = self.go_home_button(elements, self.f1, [3, 0, 100])
+        home_button = self.go_home_button(elements, self.f1, [3, 0, 100], True)
         self.save_button(elements, home_button, images)
 
-    def go_home_button_non_main_page(self, frame, layout):
-        """Creates go home button
-        :param elements to destroy
-        :param frame to attach the button to
-        :param layout of the button.
-        :return created button"""
-        row = layout[0]
-        column = layout[1]
-        padx = None
-        if len(layout) > 2:
-            padx = layout[2]
-        go_home_main_page = StringVar()
-        go_home_main_page_button = Button(frame, textvariable=go_home_main_page,
-                                          command=lambda: self.raise_frame(self.f1),
-                                          font="Roman",
-                                          bg="#22bfc5", highlightbackground='#22bfc5', height=2, width=11)
-        go_home_main_page_button.grid(row=row, column=column, padx=padx)
-        go_home_main_page.set("Go home")
-        return go_home_main_page_button
+    def create_navigation_icon(self, left, images, text_box):
+        """Create and configure navigation icons
+        :param left should be True if icon is left; False when right
+        :param images images to show
+        :param text_box text box to attach to.
+        :return created icon"""
+        if left:
+            icon = self.img.show_icon("arrow-left.png", W)
+            icon.configure(
+                command=lambda: self.img.previous_images(images, self.index_to_show, self.image_index, self.shown_image,
+                                                         text_box))
+        else:
+            icon = self.img.show_icon("arrow-right.png", E)
+            icon.configure(
+                command=lambda: self.img.next_images(images, self.index_to_show, self.image_index, self.shown_image,
+                                                     text_box))
+        return icon
 
-    def go_home_button(self, elements, frame, layout):
+    def go_home_button(self, elements, frame, layout, main_page):
         """Creates go home button
         :param elements to destroy
         :param frame to attach the button to
-        :param layout of the button.
+        :param layout of the button
+        :param main_page True if it's main page
         :return created button"""
-        row = layout[0]
-        column = layout[1]
-        padx = None
+        row, column, padx, go_home_main_page = layout[0], layout[1], None, StringVar()
         if len(layout) > 2:
             padx = layout[2]
-        go_home_main_page = StringVar()
-        go_home_main_page_button = Button(frame, textvariable=go_home_main_page,
+        if main_page:
+            go_home_button = Button(frame, textvariable=go_home_main_page,
                                           command=lambda: self.destroy_elements(elements,
-                                                                                go_home_main_page_button,
-                                                                                self.image_index, self.metadata),
-                                          font="Roman",
-                                          bg="#22bfc5", highlightbackground='#22bfc5', height=2, width=11)
-        go_home_main_page_button.grid(row=row, column=column, padx=padx)
+                                          go_home_button, self.image_index, self.metadata),
+                                          font="Roman", bg="#22bfc5", highlightbackground='#22bfc5', height=2, width=11)
+        else:
+            go_home_button = Button(frame, textvariable=go_home_main_page,
+                                              command=lambda: self.raise_frame(self.f1),
+                                              font="Roman",
+                                              bg="#22bfc5", highlightbackground='#22bfc5', height=2, width=11)
+        go_home_button.grid(row=row, column=column, padx=padx)
         go_home_main_page.set("Go home")
-        return go_home_main_page_button
+        return go_home_button
 
     def save_button(self, elements, go_home_main_page_button, images):
         """Creates save button
@@ -166,7 +189,8 @@ class Frames:
         Button(self.f1, text='Save', command=lambda: self.raise_frame(self.f4)).grid(row=0, column=2, sticky=W)
         save = StringVar()
         save_button = Button(self.f1, textvariable=save,
-                             command=lambda: self.confirm_saving(elements, go_home_main_page_button, images), font="Roman",
+                             command=lambda: self.confirm_saving(elements, go_home_main_page_button, images),
+                             font="Roman",
                              bg="#22bfc5", highlightbackground='#22bfc5', height=2, width=11)
         save.set("Save Metadata")
         save_button.grid(row=2, column=0, padx=100)
@@ -186,7 +210,7 @@ class Frames:
         """Add image picker button."""
         pick_image = StringVar()
         pick_image_button = Button(self.f1, textvariable=pick_image,
-                                   command=lambda: self.pick_images(), font="Roman",
+                                   command=lambda: self.show_images(), font="Roman",
                                    bg="#22bfc5", highlightbackground='#22bfc5', height=2, width=11)
         pick_image.set("Pick Images")
         pick_image_button.grid(row=2, column=0, padx=170)
@@ -200,21 +224,28 @@ class Frames:
                                         'Are you sure you want to save metadata for the selected images?',
                                         icon='warning')
         if dialog == 'yes':
-            self.raise_frame(self.f4)
-            print("Okay, Saving metadata...")
-            for image in images:
-                image_name = os.path.basename(image)
-                print(os.path.basename(image))
-                print("Sending a call to the service to save metadata for image " + image_name)
-                requests.get('http://127.0.0.1:5000/image_process_with_save?url=photos/' + image_name)
+            self.save_metadata(images)
             self.destroy_element(go_home_main_page_button)
         else:
             messagebox.showinfo('Return', 'You will now return to the Home screen')
             self.destroy_elements(elements, go_home_main_page_button, self.image_index, self.metadata)
             self.start()
+        self.build_gui_save_page(images, elements)
 
-        new_go_home_button = self.go_home_button(elements, self.f4, [2, 0])
-        # Add text and undo button
+    def save_metadata(self, images):
+        """Save metadata for each image.
+        :param images"""
+        self.raise_frame(self.f4)
+        for image in images:
+            image_name = os.path.basename(image)
+            print("Sending a call to the service to save metadata for image " + image_name)
+            requests.get('http://127.0.0.1:5000/image_process_with_save?url=photos/' + image_name)
+
+    def build_gui_save_page(self, images, elements):
+        """Adds logo, text and undo button to save page
+        :param elements for home page
+        :param images"""
+        new_go_home_button = self.go_home_button(elements, self.f4, [2, 0], True)
         self.img.show_logo(self.f4, False)
         text = self.show_text(self.f4, 7, 0, "", "All Metadata in images is now saved")
         self.undo_button(text, images)
@@ -225,12 +256,8 @@ class Frames:
         :param go_home_button
         :param image_index
         :param metadata to clear"""
-        text_box = elements[0]
-        image_menu = elements[1]
-        icon_label = elements[2]
-        icon_label1 = elements[3]
-        shown_image = elements[4]
-        print("Destroying everything")
+        text_box, image_menu, icon_label, icon_label1, shown_image = \
+            elements[0], elements[1], elements[2], elements[3], elements[4]
         text_box.destroy()
         image_menu.destroy()
         for image in shown_image:
@@ -238,9 +265,16 @@ class Frames:
         icon_label.destroy()
         go_home_button.destroy()
         icon_label1.destroy()
+        self.show_home_page(image_index, shown_image, metadata)
+
+    def show_home_page(self, image_index, shown_image, metadata):
+        """Destroy elements on the page
+        :param image_index
+        :param shown_image
+        :param metadata to clear"""
         # Show the main frame
         self.raise_frame(self.f1)
-        # Clear image data and metadata
+        # Remove all image data, icons and metadata to display main frame
         self.clear_data(image_index, shown_image, metadata)
         # Display Home page
         self.start()
@@ -258,7 +292,7 @@ class Frames:
 
     def destroy_element(self, element):
         """Destroy element on the page
-        :param elements to destroy"""
+        :param element to destroy"""
         element.destroy()
 
     def create_buttons(self):
@@ -270,7 +304,7 @@ class Frames:
 
     def show_text_box(self):
         """Show text box"""
-        text_box = Text(self.f1, height=10, width=40, padx=15, pady=15, bg="#22bfc5")
+        text_box = Text(self.f1, height=10, width=40, padx=10, pady=20, bg="#22bfc5")
         text_box.tag_configure("center", justify="center")
         text_box.grid(column=0, row=6)
         text_box.tag_add("center", 1.0, "end")
@@ -286,7 +320,7 @@ class Frames:
         text = Text(frame, height=15, width=70, bg="#22bfc5", padx=10, pady=10)
         text.tag_configure('big', font=('Arial', 14, 'bold'), justify='center')
         text.tag_configure('color',
-                            font=('Ariel', 12))
+                           font=('Ariel', 12))
         text.insert(END, title_to_show, 'big')
         text.insert(END, text_to_show, 'color')
         text.grid(row=row, column=column, padx=10, pady=10)
