@@ -6,14 +6,14 @@ root = Tk()
 root.title("Image Metadata App")
 
 # Create frames for each page
-f1 = LabelFrame(root, width=650, height=700)
-f2 = LabelFrame(root)
-f3 = LabelFrame(root)
-f4 = LabelFrame(root)
+f_home = LabelFrame(root, width=650, height=700)
+f_about = LabelFrame(root)
+f_help = LabelFrame(root)
+f_save = LabelFrame(root)
 
-img = ImagesProcessing(f1)
-fr = Frames(f1, f2, f3, f4)
+img = ImagesProcessing(f_home)
+app = Frames(f_home, f_about, f_help, f_save)
 
-fr.start()
-fr.raise_frame(f1)
+app.start()
+app.raise_frame(f_home)
 root.mainloop()

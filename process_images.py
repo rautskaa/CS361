@@ -10,9 +10,12 @@ class ImagesProcessing:
 
     def __init__(self, frame):
         self.frame = frame
+        self.process_images_URL = "http://127.0.0.1:5000/image_process_only?url=photos/"
 
     def show_logo(self, frame, main_page):
-        """Shows logo."""
+        """Shows logo
+        :param frame
+        :param main_page"""
         logo = PIL.Image.open("logo.png")
         logo = ImageTk.PhotoImage(logo)
         # If it's a main page, attach it to a main frame
@@ -51,8 +54,7 @@ class ImagesProcessing:
             height = 250
         else:
             width, height = 250, 250
-        image = image.resize((width, height))
-        return image
+        return image.resize((width, height))
 
     def show_image(self, image):
         """Show image
@@ -66,48 +68,40 @@ class ImagesProcessing:
         img_label.grid(row=4, column=0, padx=170)
         return img_label
 
-    def next_images(self, images, index_to_show, image_index, shown_image, text_box):
-        """Shows next image in the set of selected images.
-          :param images
-          :param index_to_show
-          :param image_index
-          :param shown_image
-          :param text_box"""
-        # If there are images left, show the image
-        if image_index[-1] < len(images) - 1:
-            updated_index = image_index[-1] + 1
-            image = self.update_image_to_view(images, updated_index, index_to_show, image_index, shown_image)
-            # clear all data and update the text box with the metadata description for next image
-            self.update_text_box(text_box, image)
-
-    def previous_images(self, images, index_to_show, image_index, shown_image, text_box):
-        """Shows previous image in the set of selected images.
-          :param images
-          :param index_to_show
-          :param image_index
-          :param shown_image
-          :param text_box"""
-        if image_index[-1] >= 1:
-            updated_index = image_index[-1] - 1
-            image = self.update_image_to_view(images, updated_index, index_to_show, image_index, shown_image)
-            # clear all data and update the text box with the metadata description for previous image
-            self.update_text_box(text_box, image)
+    def next_prev_images(self, images, text_box, image_data, next):
+        """Shows next and previous image in the set of selected images. Clear all data and
+        update the text box with the metadata description for next image.
+        :param next
+        :param image_data
+        :param images
+        :param text_box"""
+        index, image_index, shown_image, image = image_data[0], image_data[1], image_data[2], Image
+        if next:
+            # If there are images left, show the next image
+            if image_index[-1] < len(images) - 1:
+                updated_index = image_index[-1] + 1
+                image = self.update_image_to_view(images, updated_index, image_data)
+                self.update_text_box(text_box, image)
+        else:  # Show previous image
+            if image_index[-1] >= 1:
+                updated_index = image_index[-1] - 1
+                image = self.update_image_to_view(images, updated_index, image_data)
+                self.update_text_box(text_box, image)
 
     def set_index_to_show(self, images, image_index, index_to_show):
         """Updates index of displayed images.
-          :param images
-          :param image_index
-          :param index_to_show"""
+        :param images
+        :param image_index
+        :param index_to_show"""
         index_to_show.set("Image " + str(image_index[-1] + 1) + " out of " + str(len(images)))
 
-    def update_image_to_view(self, images, updated_index, index_to_show, image_index, shown_image):
+    def update_image_to_view(self, images, updated_index, image_data):
         """Updates image to show.
-           :param images
-           :param updated_index
-           :param index_to_show
-           :param image_index
-           :param shown_image
-           :return new image"""
+        :param images
+        :param updated_index
+        :param image_data
+        :return new image"""
+        index, image_index, shown_image = image_data[0], image_data[1], image_data[2]
         image_index.pop()
         image_index.append(updated_index)
         if shown_image:
@@ -116,18 +110,19 @@ class ImagesProcessing:
         new_image = images[image_index[-1]]
         current_image = self.show_image(new_image)
         shown_image.append(current_image)
-        self.set_index_to_show(images, image_index, index_to_show)
+        self.set_index_to_show(images, image_index, index)
         return new_image
 
     def update_text_box(self, text_box, image):
         """Updates image description in text box.
-           :param text_box
-           :param image_description
-        """
+        :param text_box
+        :param image"""
+        print("image", image)
         image_name = os.path.basename(image)
+        print("image name", image_name)
         print("Sending a call to the service to get metadata for image " + image_name)
         # Make a call to the Image Metadata Service to get a metadata with image description.
-        image_description = requests.get('http://127.0.0.1:5000/image_process_only?url=photos/' + image_name).content
+        image_description = requests.get(self.process_images_URL + image_name).content
         data = json.loads(image_description)
         final_string = ', '.join(data["labels"])
         text_box.delete(1.0, END)
